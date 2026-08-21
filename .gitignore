@@ -43,3 +43,6 @@ vendor/
 .swc/
 
 # Taro 编译产物 (含 dist/ 但已在 .gitignore)
+
+# 微信小程序上传密钥（CI 用）
+scripts/private.key

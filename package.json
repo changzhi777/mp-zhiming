@@ -18,7 +18,9 @@
     "format": "biome format --write .",
     "typecheck": "tsc --noEmit",
     "sync:shared": "git -C vendor/zhiming pull origin main",
-    "ci": "pnpm sync:shared && pnpm install && pnpm lint && pnpm typecheck && pnpm test"
+    "ci": "pnpm sync:shared && pnpm install && pnpm lint && pnpm typecheck && pnpm test",
+    "mp:preview": "node scripts/ci.mjs preview",
+    "mp:upload": "node scripts/ci.mjs upload"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.0.0",
@@ -50,6 +52,7 @@
     "@vitest/coverage-v8": "^3.0.0",
     "esbuild-loader": "^4.5.0",
     "happy-dom": "^15.0.0",
+    "miniprogram-ci": "^2.1.31",
     "tailwindcss": "^4.0.0",
     "typescript": "^5.5.4",
     "vitest": "^3.0.0",
