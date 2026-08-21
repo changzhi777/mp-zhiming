@@ -1,10 +1,9 @@
-// mp-zhiming/src/pages/chart-input/index.tsx · 排盘输入（M17 · P1）
-// MVP：极简版 — 4 个必填（年/月/日/时）+ 性别 + 公历；地点硬编码北京
-// 阶段 3.6 chart-result 落地后端联动；提交后 castChart → reLaunch chart-result
+// mp-zhiming/src/pages/chart-input/index.tsx · 排盘输入（M17 · P1 + C2 + C3）
+// 公/农历支持（C2）+ 省/市/县三级联动（C3）；提交后 castChart → reLaunch chart-result
 import { Button, Input, Picker, Text, View } from "@tarojs/components"
 import Taro from "@tarojs/taro"
-import { useState } from "react"
-import { castChart } from "../../lib/api"
+import { useEffect, useState } from "react"
+import { type LocationItem, castChart, getLocations } from "../../lib/api"
 import { t } from "../../lib/i18n"
 
 const HOURS = [
@@ -29,24 +28,68 @@ export default function ChartInput() {
   const [day, setDay] = useState(now.getDate())
   const [hour, setHour] = useState(0) // index into HOURS
   const [gender, setGender] = useState<0 | 1>(0)
+  // C2：农历支持
+  const [calendar, setCalendar] = useState<"solar" | "lunar">("solar")
+  const [isLeapMonth, setIsLeapMonth] = useState(false)
+  // C3：行政区划三级联动
+  const [provinces, setProvinces] = useState<LocationItem[]>([])
+  const [cities, setCities] = useState<LocationItem[]>([])
+  const [counties, setCounties] = useState<LocationItem[]>([])
+  const [pIdx, setPIdx] = useState(0)
+  const [cIdx, setCIIdx] = useState(0)
+  const [kIdx, setKIdx] = useState(0)
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
+
+  // 拉省
+  useEffect(() => {
+    getLocations(undefined, 1)
+      .then(setProvinces)
+      .catch((e) => setErr(e instanceof Error ? e.message : String(e)))
+  }, [])
+
+  // 选省 → 拉市
+  useEffect(() => {
+    const p = provinces[pIdx]
+    if (!p) return
+    setCIIdx(0)
+    setKIdx(0)
+    setCounties([])
+    getLocations(p.code, 2)
+      .then(setCities)
+      .catch((e) => console.warn("[getLocations cities]", e))
+  }, [pIdx, provinces])
+
+  // 选市 → 拉县
+  useEffect(() => {
+    const c = cities[cIdx]
+    if (!c) return
+    setKIdx(0)
+    getLocations(c.code, 3)
+      .then(setCounties)
+      .catch((e) => console.warn("[getLocations counties]", e))
+  }, [cIdx, cities])
 
   const submit = async () => {
     setBusy(true)
     setErr(null)
     try {
       const h = Number(HOURS[hour].split("-")[0])
+      const loc = counties[kIdx] ?? cities[cIdx] ?? provinces[pIdx]
       const birth = {
-        calendar: "solar" as const,
-        isLeapMonth: false,
+        calendar,
+        isLeapMonth,
         year,
         month,
         day,
         hour: h,
         minute: 0,
         gender,
-        location: { city: "北京" }, // MVP 占位；阶段 3.6 后接真实坐标
+        location: {
+          city: loc?.name ?? "北京",
+          latitude: loc?.lat ?? undefined,
+          longitude: loc?.lon ?? undefined,
+        },
         useTrueSolarTime: true,
         sect: 1 as const,
         dstAdjusted: false,
@@ -69,17 +112,29 @@ export default function ChartInput() {
         <Picker
           mode="selector"
           range={["公历", "农历"]}
-          value={0}
-          onChange={(e) => {
-            /* MVP 阶段只支持公历；农历留待 v0.2 */
-            void e
-          }}
+          value={calendar === "solar" ? 0 : 1}
+          onChange={(e) => setCalendar(e.detail.value === 0 ? "solar" : "lunar")}
         >
           <View className="px-3 py-2 bg-card border border-rule rounded">
-            <Text className="text-ink">公历</Text>
+            <Text className="text-ink">{calendar === "solar" ? "公历" : "农历"}</Text>
           </View>
         </Picker>
       </Field>
+
+      {calendar === "lunar" && (
+        <Field label="闰月">
+          <Picker
+            mode="selector"
+            range={["否", "是"]}
+            value={isLeapMonth ? 1 : 0}
+            onChange={(e) => setIsLeapMonth(e.detail.value === 1)}
+          >
+            <View className="px-3 py-2 bg-card border border-rule rounded">
+              <Text className="text-ink">{isLeapMonth ? "闰月" : "非闰月"}</Text>
+            </View>
+          </Picker>
+        </Field>
+      )}
 
       <Field label={t("chart.input.birthTime")}>
         <View className="flex gap-2">
@@ -117,11 +172,40 @@ export default function ChartInput() {
       </Field>
 
       <Field label={t("chart.input.birthPlace")}>
-        <Input
-          className="px-3 py-2 bg-card border border-rule rounded"
-          placeholder={t("chart.input.placePh")}
-          value="北京"
-        />
+        <Picker
+          mode="selector"
+          range={provinces.map((p) => p.name)}
+          value={pIdx}
+          onChange={(e) => setPIdx(Number(e.detail.value))}
+        >
+          <View className="px-3 py-2 bg-card border border-rule rounded">
+            <Text className="text-ink">{provinces[pIdx]?.name ?? "加载中…"}</Text>
+          </View>
+        </Picker>
+        {cities.length > 0 && (
+          <Picker
+            mode="selector"
+            range={cities.map((c) => c.name)}
+            value={cIdx}
+            onChange={(e) => setCIIdx(Number(e.detail.value))}
+          >
+            <View className="mt-2 px-3 py-2 bg-card border border-rule rounded">
+              <Text className="text-ink">{cities[cIdx]?.name ?? "选择城市"}</Text>
+            </View>
+          </Picker>
+        )}
+        {counties.length > 0 && (
+          <Picker
+            mode="selector"
+            range={counties.map((k) => k.name)}
+            value={kIdx}
+            onChange={(e) => setKIdx(Number(e.detail.value))}
+          >
+            <View className="mt-2 px-3 py-2 bg-card border border-rule rounded">
+              <Text className="text-ink">{counties[kIdx]?.name ?? "选择区县"}</Text>
+            </View>
+          </Picker>
+        )}
       </Field>
 
       {err && <Text className="block mb-4 text-sm text-accent">{err}</Text>}

@@ -63,6 +63,23 @@ export const getMe = () =>
     mainProfileId: string | null
   }>("GET", "/me")
 
+/** 行政区划（主仓 GET /locations · M4 三级联动） */
+export type LocationItem = {
+  code: string
+  name: string
+  parentCode: string | null
+  level: number // 1省 2市 3县
+  lat: number | null
+  lon: number | null
+}
+export const getLocations = (parentCode?: string, level?: 1 | 2 | 3) => {
+  const params = new URLSearchParams()
+  if (parentCode) params.set("parentCode", parentCode)
+  if (level) params.set("level", String(level))
+  const qs = params.toString()
+  return request<LocationItem[]>("GET", `/locations${qs ? `?${qs}` : ""}`)
+}
+
 /** 单档案详情（主仓 GET /me/profiles/:id） */
 export const getProfile = (id: string) =>
   request<{
