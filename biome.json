@@ -19,5 +19,16 @@
   "javascript": {
     "formatter": { "quoteStyle": "double", "semicolons": "asNeeded" }
   },
-  "organizeImports": { "enabled": true }
+  "organizeImports": { "enabled": true },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true
+    },
+    "ignore": [
+      "vendor/**",
+      "dist/**",
+      "node_modules/**"
+    ]
+  }
 }
