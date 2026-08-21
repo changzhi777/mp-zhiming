@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+/* 新中式 token（与主仓 apps/web/src/index.css 同源；M14 纸/墨双主题） */
+@theme {
+  --color-paper: #f6f1e7;
+  --color-ink: #2c2a26;
+  --color-muted: #6b645a;
+  --color-rule: #d8cfbc;
+  --color-accent: #b3352c;
+  --color-link: #1f3a5f;
+  --color-gold: #b08d46;
+  --color-card: rgba(255, 255, 255, 0.5);
+  --color-card-strong: rgba(255, 255, 255, 0.7);
+  --color-card-soft: rgba(255, 255, 255, 0.4);
+  --font-serif: "Noto Serif SC", "Songti SC", "STSong", serif;
+}
+
+/* 深色「墨」主题：page.theme === "dark" 时切换（Taro 用 .theme-dark 标记） */
+@custom-variant dark (&:where(.theme-dark, .theme-dark *));
+.theme-dark {
+  --color-paper: #17150f;
+  --color-ink: #e8e2d4;
+  --color-muted: #a89f8d;
+  --color-rule: #3a362c;
+  --color-accent: #d4574a;
+  --color-link: #7ba3d4;
+  --color-gold: #c9a55e;
+  --color-card: rgba(255, 250, 240, 0.06);
+  --color-card-strong: rgba(255, 250, 240, 0.1);
+  --color-card-soft: rgba(255, 250, 240, 0.04);
+}
+
+page {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-serif);
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
