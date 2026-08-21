@@ -3,7 +3,8 @@
 import { Button, Input, Picker, Text, View } from "@tarojs/components"
 import Taro from "@tarojs/taro"
 import { useEffect, useState } from "react"
-import { type LocationItem, castChart, getLocations } from "../../lib/api"
+import { castChart, getLocations } from "../../lib/api"
+import type { LocationItem } from "../../lib/api"
 import { t } from "../../lib/i18n"
 
 const HOURS = [
