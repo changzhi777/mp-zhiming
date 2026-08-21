@@ -1,6 +1,6 @@
-// mp-zhiming/src/lib/api.ts · fetch wrapper（M17）
-// 关键限制：微信 wx.request 不支持自定义 header → access token 走 query ?token=
-// 服务端在 routes/v1/index.ts 的 preHandler 兼容 token query（需 server 端补适配，本期先打 query 给后续 server hook）
+// mp-zhiming/src/lib/api.ts · fetch wrapper（M17 · R2 优化）
+// R2：access token 走 Authorization header（消除 ?token= query 暴露在 URL 日志/历史/反代 access log 的风险）
+// 微信 wx.request 2.x 已支持自定义 header → 与 web 主站同款鉴权
 // 错误码映射：401 → 清本地态跳 login；其他透传
 import Taro from "@tarojs/taro"
 import type { AuthUser } from "../store/auth"
@@ -16,16 +16,14 @@ async function request<T>(
   body?: unknown,
 ): Promise<T> {
   const token = useAuth.getState().accessToken
-  // token 走 query（wx.request header 限制）
-  const sep = path.includes("?") ? "&" : "?"
-  const url = token
-    ? `${API_BASE}${path}${sep}token=${encodeURIComponent(token)}`
-    : `${API_BASE}${path}`
+  const url = `${API_BASE}${path}`
+  const headers: Record<string, string> = { "content-type": "application/json" }
+  if (token) headers.authorization = `Bearer ${token}` // R2：header 鉴权
   const res = await Taro.request({
     url,
     method,
     data: body,
-    header: { "content-type": "application/json" },
+    header: headers,
   })
   const data = res.data as unknown
   // 业务错误：HTTP 4xx/5xx + { code, message, details }
@@ -54,6 +52,16 @@ export class ApiErrorClass extends Error {
 /** 微信一键登录（M17 阶段 1 后端契约） */
 export const wxLogin = (code: string) =>
   request<{ accessToken: string; user: AuthUser }>("POST", "/auth/wx-login", { code })
+
+/** 当前用户 + 主盘 ID（主仓 GET /me，含 mainProfile BirthInput JSON） */
+export const getMe = () =>
+  request<{
+    id: string
+    email: string
+    locale: string
+    credits: number
+    mainProfileId: string | null
+  }>("GET", "/me")
 
 /** 单档案详情（主仓 GET /me/profiles/:id） */
 export const getProfile = (id: string) =>

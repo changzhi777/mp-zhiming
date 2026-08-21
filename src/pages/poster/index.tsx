@@ -6,21 +6,26 @@ import Taro from "@tarojs/taro"
 import { useState } from "react"
 import { createShareLink } from "../../lib/api"
 import { t } from "../../lib/i18n"
+import { useAuth } from "../../store/auth"
 
 const POSTER_HOST = "https://91zm.com.cn"
 
 export default function PosterPage() {
+  const mainProfileId = useAuth((s) => s.mainProfileId)
   const [key, setKey] = useState<string | null>(null)
   const [expireAt, setExpireAt] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
 
   const generate = async () => {
+    if (!mainProfileId) {
+      setErr("未绑定主盘，请先排盘")
+      return
+    }
     setBusy(true)
     setErr(null)
     try {
-      // MVP 阶段：硬编码主盘 ID "main"（阶段 3.5 后从 user.mainProfile 取）
-      const r = await createShareLink("main")
+      const r = await createShareLink(mainProfileId)
       setKey(r.key)
       setExpireAt(r.expiresAt)
     } catch (e) {

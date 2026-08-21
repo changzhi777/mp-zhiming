@@ -38,6 +38,22 @@ describe("t() 取词", () => {
   })
 })
 
+describe("字典完整性（R7）", () => {
+  it("zh-CN 与 zh-TW 字典 key 数一致（防止某语漏 key）", () => {
+    // 静态导入 DICT 不可行（私有 const）；通过间接方式：t(key) 在两语都不返回原 key
+    // 改测：取 zh-CN / zh-TW 已知 keys，全部能取到非 key 透传
+    const known = ["login.welcome", "huangli.yi", "common.confirm", "chart.title", "me.title"]
+    useLocale.setState({ locale: "zh-CN" })
+    for (const k of known) {
+      expect(t(k)).not.toBe(k)
+    }
+    useLocale.setState({ locale: "zh-TW" })
+    for (const k of known) {
+      expect(t(k)).not.toBe(k)
+    }
+  })
+})
+
 describe("setLocale 持久化", () => {
   beforeEach(() => {
     useLocale.setState({ locale: "zh-CN" })

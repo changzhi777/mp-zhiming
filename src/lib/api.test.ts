@@ -48,7 +48,7 @@ describe("request 通用行为", () => {
     expect(r.accessToken).toBe("tok-1")
   })
 
-  it("有 token 时附加 ?token= query（wx.request header 限制）", async () => {
+  it("有 token 时附加 Authorization header（R2：消除 ?token= query 泄露）", async () => {
     useAuth.getState().setSession("tok-exist", {
       id: "u-1",
       email: "wx_x@placeholder.local",
@@ -59,12 +59,11 @@ describe("request 通用行为", () => {
       statusCode: 200,
       data: { ok: true },
     })
-    // 触发任意需要鉴权的请求（这里直接调 wxLogin 不会附带 token，因为是匿名路由；
-    // 改用 mock 一段 getProfile 测试 ?token= 注入逻辑）
     const { getProfile } = await import("./api")
     await getProfile("main")
-    const url = (requestMock.mock.calls[0][0] as { url: string }).url
-    expect(url).toContain("?token=tok-exist")
+    const call = requestMock.mock.calls[0][0] as { url: string; header: Record<string, string> }
+    expect(call.url).not.toContain("?token=")
+    expect(call.header.authorization).toBe("Bearer tok-exist")
   })
 
   it("401 业务码：清本地态 + reLaunch login", async () => {
@@ -102,5 +101,16 @@ describe("request 通用行为", () => {
       data: { code: 50303, message: "微信小程序服务未配置" },
     })
     await expect(wxLogin("any")).rejects.toMatchObject({ code: 50303 })
+  })
+
+  it("R6：HTTP 500 无 body 时抛兜底 ApiError（err.code 用 statusCode）", async () => {
+    requestMock.mockResolvedValue({
+      statusCode: 500,
+      data: null,
+    })
+    await expect(wxLogin("any")).rejects.toMatchObject({
+      code: 500,
+      message: "请求失败",
+    })
   })
 })

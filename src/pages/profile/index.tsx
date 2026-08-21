@@ -12,6 +12,7 @@ type Profile = { id: string; name: string; chart: Chart } | null
 
 export default function ProfilePage() {
   const user = useAuth((s) => s.user)
+  const mainProfileId = useAuth((s) => s.mainProfileId)
   const [profile, setProfile] = useState<Profile>(null)
   const [err, setErr] = useState<string | null>(null)
 
@@ -20,12 +21,15 @@ export default function ProfilePage() {
       Taro.reLaunch({ url: "/pages/login/index" }).catch(() => {})
       return
     }
-    // MVP：先拉 mainProfile（M2 主盘 ID = user.id 衍生；本期用硬编码 mainProfileId 占位）
-    // 阶段 3.5 排盘输入落地后，从 user.mainProfile 取真实 ID
-    getProfile("main")
+    // R4+R5：silentLogin 已拉 mainProfileId，未拉则不绑盘（引导排盘）
+    if (!mainProfileId) {
+      setErr(t("profile.empty"))
+      return
+    }
+    getProfile(mainProfileId)
       .then((p) => setProfile(p as Profile))
       .catch((e) => setErr(e instanceof Error ? e.message : String(e)))
-  }, [user])
+  }, [user, mainProfileId])
 
   if (err) return <CenterErr msg={err} />
   if (!profile) return <CenterLoading />
