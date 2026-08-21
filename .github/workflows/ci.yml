@@ -1,0 +1,93 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  ci:
+    name: Lint + TypeCheck + Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: false  # vendor/zhiming 用 git pull 同步
+          fetch-depth: 1
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.0
+          package_json_path: ./package.json
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Sync shared contracts
+        run: |
+          if [ -d vendor/zhiming ]; then
+            git -C vendor/zhiming pull --depth=1 origin main || echo "shared sync skipped (offline?)"
+          else
+            git clone --depth=1 https://github.com/changzhi777/zhiming.git vendor/zhiming
+          fi
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Biome check
+        run: pnpm lint
+
+      - name: TypeScript check
+        run: pnpm typecheck
+
+      - name: Vitest
+        run: pnpm test -- --reporter=verbose
+
+      - name: Coverage
+        if: github.event_name == 'pull_request'
+        run: pnpm test:coverage
+
+  build-weapp:
+    name: Build WeApp
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: ci
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Sync shared
+        run: |
+          if [ -d vendor/zhiming ]; then
+            git -C vendor/zhiming pull --depth=1 origin main || true
+          else
+            git clone --depth=1 https://github.com/changzhi777/zhiming.git vendor/zhiming
+          fi
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build:weapp
+      - uses: actions/upload-artifact@v4
+        with:
+          name: weapp-dist
+          path: dist/
+          retention-days: 14

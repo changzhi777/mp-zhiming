@@ -1,0 +1,5 @@
+packages:
+  - "."
+  - "vendor/zhiming/packages/shared"
+  # 注意：vendor/zhiming 是软链克隆，pnpm 不会污染原仓
+  # 共享契约变更：cd vendor/zhiming && git pull origin main
