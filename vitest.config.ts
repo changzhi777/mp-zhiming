@@ -23,12 +23,18 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       include: ["src/**/*.{ts,tsx}"],
-      exclude: ["src/**/*.{test,spec}.{ts,tsx}", "src/app.config.ts", "src/app.tsx"],
+      exclude: [
+        "src/**/*.{test,spec}.{ts,tsx}",
+        "src/app.config.ts",
+        "src/app.tsx",
+        // 页面组件由微信开发者工具真机测试覆盖（happy-dom 无法渲染 Taro 组件）
+        "src/pages/**",
+      ],
       thresholds: {
-        lines: 60,
+        lines: 70,
         branches: 50,
         functions: 60,
-        statements: 60,
+        statements: 70,
       },
     },
   },

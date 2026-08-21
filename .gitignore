@@ -39,3 +39,7 @@ vendor/
 # 临时
 .tmp/
 .cache/
+# Native binaries (含 SWC plugin 缓存，不入仓)
+.swc/
+
+# Taro 编译产物 (含 dist/ 但已在 .gitignore)
