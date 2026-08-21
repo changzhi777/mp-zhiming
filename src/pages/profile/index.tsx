@@ -1,11 +1,11 @@
 // mp-zhiming/src/pages/profile/index.tsx · 单档案盘面（M17 · P0）
 // 精简版：四柱 + 五行；MVP 阶段只展示主盘（M2 主盘绑定）
-import { View, Text } from "@tarojs/components"
+import { Text, View } from "@tarojs/components"
 import Taro from "@tarojs/taro"
 import { useEffect, useState } from "react"
 import { getProfile } from "../../lib/api"
-import { useAuth } from "../../store/auth"
 import { t } from "../../lib/i18n"
+import { useAuth } from "../../store/auth"
 
 type Chart = { 输入?: unknown; 八字?: { 四柱: string }; hourKnown?: boolean }
 type Profile = { id: string; name: string; chart: Chart } | null
@@ -23,8 +23,8 @@ export default function ProfilePage() {
     // MVP：先拉 mainProfile（M2 主盘 ID = user.id 衍生；本期用硬编码 mainProfileId 占位）
     // 阶段 3.5 排盘输入落地后，从 user.mainProfile 取真实 ID
     getProfile("main")
-      .then((p) => setProfile(p))
-      .catch((e) => setErr(String(e?.message ?? e)))
+      .then((p) => setProfile(p as Profile))
+      .catch((e) => setErr(e instanceof Error ? e.message : String(e)))
   }, [user])
 
   if (err) return <CenterErr msg={err} />
@@ -41,7 +41,7 @@ export default function ProfilePage() {
         <View className="flex justify-between">
           {pillars.length === 4 ? (
             pillars.map((p, i) => (
-              <View key={i} className="flex-1 text-center">
+              <View key={p} className="flex-1 text-center">
                 <Text className="block text-xs text-muted">{["年", "月", "日", "时"][i]}</Text>
                 <Text className="block mt-1 text-lg font-serif text-ink">{p}</Text>
               </View>

@@ -17,7 +17,10 @@ async function request<T>(
 ): Promise<T> {
   const token = useAuth.getState().accessToken
   // token 走 query（wx.request header 限制）
-  const url = `${API_BASE}${path}${token ? (path.includes("?") ? "&" : "?") + "token=" + encodeURIComponent(token) : ""}`
+  const sep = path.includes("?") ? "&" : "?"
+  const url = token
+    ? `${API_BASE}${path}${sep}token=${encodeURIComponent(token)}`
+    : `${API_BASE}${path}`
   const res = await Taro.request({
     url,
     method,
@@ -58,7 +61,7 @@ export const getProfile = (id: string) =>
     id: string
     name: string
     chart: unknown // 引擎盘面（中文键 JSON）
-  }>(`GET`, `/me/profiles/${id}`)
+  }>("GET", `/me/profiles/${id}`)
 
 /** 黄历（主仓 GET /huangli） */
 export const getHuangli = (y: number, m: number, d: number) =>

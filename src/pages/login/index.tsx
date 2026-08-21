@@ -1,10 +1,10 @@
 // mp-zhiming/src/pages/login/index.tsx · 微信一键登录（M17 · P0）
-import { View, Text, Button, Image } from "@tarojs/components"
+import { Button, Text, View } from "@tarojs/components"
 import Taro from "@tarojs/taro"
 import { useState } from "react"
 import { wxLogin } from "../../lib/api"
-import { useAuth } from "../../store/auth"
 import { t } from "../../lib/i18n"
+import { useAuth } from "../../store/auth"
 
 export default function Login() {
   const [busy, setBusy] = useState(false)
@@ -40,9 +40,7 @@ export default function Login() {
       >
         {t("login.wx")}
       </Button>
-      {err && (
-        <Text className="block mt-4 text-sm text-accent">{err}</Text>
-      )}
+      {err && <Text className="block mt-4 text-sm text-accent">{err}</Text>}
       <Text className="block mt-8 text-xs text-muted text-center">{t("login.policy")}</Text>
     </View>
   )

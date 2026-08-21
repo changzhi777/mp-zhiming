@@ -1,15 +1,25 @@
 // mp-zhiming/src/pages/chart-input/index.tsx · 排盘输入（M17 · P1）
 // MVP：极简版 — 4 个必填（年/月/日/时）+ 性别 + 公历；地点硬编码北京
 // 阶段 3.6 chart-result 落地后端联动；提交后 castChart → reLaunch chart-result
-import { View, Text, Button, Picker, Input } from "@tarojs/components"
+import { Button, Input, Picker, Text, View } from "@tarojs/components"
 import Taro from "@tarojs/taro"
 import { useState } from "react"
 import { castChart } from "../../lib/api"
 import { t } from "../../lib/i18n"
 
 const HOURS = [
-  "23-01", "01-03", "03-05", "05-07", "07-09", "09-11",
-  "11-13", "13-15", "15-17", "17-19", "19-21", "21-23",
+  "23-01",
+  "01-03",
+  "03-05",
+  "05-07",
+  "07-09",
+  "09-11",
+  "11-13",
+  "13-15",
+  "15-17",
+  "17-19",
+  "19-21",
+  "21-23",
 ]
 const now = new Date()
 
@@ -45,7 +55,7 @@ export default function ChartInput() {
       await Taro.setStorageSync("zm-mp-last-chart", chart)
       await Taro.reLaunch({ url: "/pages/chart-result/index" })
     } catch (e) {
-      setErr(String(e?.message ?? e))
+      setErr(e instanceof Error ? e.message : String(e))
     } finally {
       setBusy(false)
     }
@@ -137,7 +147,12 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   )
 }
 
-function NumberBox({ value, min, max, onChange }: { value: number; min: number; max: number; onChange: (n: number) => void }) {
+function NumberBox({
+  value,
+  min,
+  max,
+  onChange,
+}: { value: number; min: number; max: number; onChange: (n: number) => void }) {
   return (
     <Input
       type="number"

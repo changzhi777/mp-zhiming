@@ -1,6 +1,6 @@
 // mp-zhiming/src/pages/invite/index.tsx · 邀请新人（M17 · P2）
 // MVP：生成小程序码 + 复制邀请链接（实际二维码 wx.acode.getQRCode 调用主仓 /share/poster）
-import { View, Text, Button, Image } from "@tarojs/components"
+import { Button, Image, Text, View } from "@tarojs/components"
 import Taro from "@tarojs/taro"
 import { useState } from "react"
 import { createShareLink } from "../../lib/api"
@@ -23,7 +23,7 @@ export default function Invite() {
       setQrUrl(url)
       setLink(url)
     } catch (e) {
-      setErr(String(e?.message ?? e))
+      setErr(e instanceof Error ? e.message : String(e))
     } finally {
       setBusy(false)
     }
@@ -65,7 +65,10 @@ export default function Invite() {
         {qrUrl ? "重新生成" : "生成邀请二维码"}
       </Button>
       {link && (
-        <Button className="w-full py-3 bg-card-strong text-ink border border-rule rounded-lg" onClick={copy}>
+        <Button
+          className="w-full py-3 bg-card-strong text-ink border border-rule rounded-lg"
+          onClick={copy}
+        >
           {t("invite.copy")}
         </Button>
       )}

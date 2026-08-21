@@ -1,9 +1,9 @@
 // mp-zhiming/src/pages/me/index.tsx · 个人中心（M17 · P2）
 // 积分余额（实时 · M16 patchUser 模式）+ 设置入口 + 退出登录
-import { View, Text, Button } from "@tarojs/components"
+import { Button, Text, View } from "@tarojs/components"
 import Taro from "@tarojs/taro"
-import { useAuth } from "../../store/auth"
 import { t } from "../../lib/i18n"
+import { useAuth } from "../../store/auth"
 
 export default function Me() {
   const user = useAuth((s) => s.user)
@@ -36,7 +36,9 @@ export default function Me() {
 
       {/* 信息卡 */}
       <View className="rounded-xl bg-card-strong border border-rule p-5 mb-4">
-        <Text className="block text-base text-ink">{user.nickname ?? user.realNameMasked ?? "用户"}</Text>
+        <Text className="block text-base text-ink">
+          {user.nickname ?? user.realNameMasked ?? "用户"}
+        </Text>
         <Text className="block text-sm text-muted mt-1">{user.email}</Text>
       </View>
 
@@ -55,7 +57,10 @@ export default function Me() {
         <Text className="text-muted">›</Text>
       </View>
 
-      <Button className="w-full mt-6 py-3 bg-card text-accent border border-rule rounded-lg" onClick={logout}>
+      <Button
+        className="w-full mt-6 py-3 bg-card text-accent border border-rule rounded-lg"
+        onClick={logout}
+      >
         {t("me.logout")}
       </Button>
     </View>

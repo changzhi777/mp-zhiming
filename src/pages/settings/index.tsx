@@ -1,9 +1,9 @@
 // mp-zhiming/src/pages/settings/index.tsx · 设置（M17 · P2）
 // 主题切换（纸/墨）+ 语言切换（简/繁）+ 清除缓存 + 关于
-import { View, Text, Button, Switch } from "@tarojs/components"
+import { Button, Text, View } from "@tarojs/components"
 import Taro from "@tarojs/taro"
 import { useState } from "react"
-import { useLocale, t } from "../../lib/i18n"
+import { t, useLocale } from "../../lib/i18n"
 
 export default function Settings() {
   const locale = useLocale((s) => s.locale)
@@ -71,7 +71,10 @@ export default function Settings() {
       </Row>
 
       <Row label={t("settings.locale")}>
-        <Button className="px-4 py-2 bg-card border border-rule rounded-lg text-ink" onClick={toggleLocale}>
+        <Button
+          className="px-4 py-2 bg-card border border-rule rounded-lg text-ink"
+          onClick={toggleLocale}
+        >
           {locale === "zh-CN" ? "简体中文" : "繁體中文"}
         </Button>
       </Row>

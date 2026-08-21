@@ -1,16 +1,17 @@
 // mp-zhiming/src/lib/api.test.ts · fetch wrapper（M17 单测）
 // 关键点：401 跳登录 + ?token= query 注入 + 错误码透传
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { ApiErrorClass } from "./api"
 import { useAuth } from "../store/auth"
+import { ApiErrorClass } from "./api"
 
 // mock Taro（api.ts 依赖 Taro.request / reLaunch）
-const requestMock = vi.fn()
-const reLaunchMock = vi.fn(() => Promise.resolve())
+import type { Mock } from "vitest"
+const requestMock = vi.fn() as Mock
+const reLaunchMock = vi.fn(() => Promise.resolve()) as Mock
 vi.mock("@tarojs/taro", () => ({
   default: {
-    request: (...args: unknown[]) => requestMock(...args),
-    reLaunch: (...args: unknown[]) => reLaunchMock(...args),
+    request: (opts: unknown) => requestMock(opts),
+    reLaunch: (opts: unknown) => reLaunchMock(opts),
   },
 }))
 

@@ -28,8 +28,7 @@ export const useAuth = create<AuthState>((set) => ({
   accessToken: null,
   user: null,
   setSession: (accessToken, user) => set({ accessToken, user }),
-  patchUser: (patch) =>
-    set((s) => (s.user ? { user: { ...s.user, ...patch } } : s)),
+  patchUser: (patch) => set((s) => (s.user ? { user: { ...s.user, ...patch } } : s)),
   clear: () => set({ accessToken: null, user: null }),
 }))
 

@@ -1,5 +1,5 @@
 // mp-zhiming/src/pages/huangli/index.tsx · 今日黄历（M17 · P0）
-import { View, Text } from "@tarojs/components"
+import { Text, View } from "@tarojs/components"
 import { useEffect, useState } from "react"
 import { getHuangli } from "../../lib/api"
 import { t } from "../../lib/i18n"
@@ -28,8 +28,8 @@ export default function HuangliPage() {
         <View className="mb-5">
           <Text className="block text-sm text-accent font-serif mb-2">{t("huangli.yi")}</Text>
           <View className="flex flex-wrap gap-2">
-            {data.宜.map((s, i) => (
-              <View key={i} className="px-3 py-1 rounded bg-card border border-rule">
+            {data.宜.map((s) => (
+              <View key={s} className="px-3 py-1 rounded bg-card border border-rule">
                 <Text className="text-sm text-ink">{s}</Text>
               </View>
             ))}
@@ -38,8 +38,8 @@ export default function HuangliPage() {
         <View>
           <Text className="block text-sm text-muted font-serif mb-2">{t("huangli.ji")}</Text>
           <View className="flex flex-wrap gap-2">
-            {data.忌.map((s, i) => (
-              <View key={i} className="px-3 py-1 rounded bg-card border border-rule">
+            {data.忌.map((s) => (
+              <View key={s} className="px-3 py-1 rounded bg-card border border-rule">
                 <Text className="text-sm text-ink">{s}</Text>
               </View>
             ))}

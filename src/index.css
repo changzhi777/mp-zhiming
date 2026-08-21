@@ -34,7 +34,5 @@ page {
   background: var(--color-paper);
   color: var(--color-ink);
   font-family: var(--font-serif);
-  transition:
-    background-color 0.2s ease,
-    color 0.2s ease;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }

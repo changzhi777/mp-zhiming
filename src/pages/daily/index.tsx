@@ -1,8 +1,7 @@
 // mp-zhiming/src/pages/daily/index.tsx · 每日运势（M17 · P1）
-import { View, Text } from "@tarojs/components"
+import { Text, View } from "@tarojs/components"
 import { useEffect, useState } from "react"
 import { getDaily } from "../../lib/api"
-import { useAuth } from "../../store/auth"
 import { t } from "../../lib/i18n"
 
 type Daily = {
@@ -22,7 +21,6 @@ const LUCK_COLOR: Record<string, string> = {
 }
 
 export default function DailyPage() {
-  const user = useAuth((s) => s.user)
   const [data, setData] = useState<Daily | null>(null)
   const [err, setErr] = useState<string | null>(null)
 

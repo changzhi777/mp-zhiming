@@ -22,7 +22,7 @@
       "@zhiming/shared/*": ["vendor/zhiming/packages/shared/src/*"],
       "@/*": ["src/*"]
     },
-    "types": ["@tarojs/taro", "react", "react-dom", "vitest/globals"]
+    "types": ["@tarojs/taro", "react", "react-dom", "vitest/globals", "node"]
   },
   "include": [
     "src/**/*",

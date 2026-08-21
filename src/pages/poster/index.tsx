@@ -1,7 +1,7 @@
 // mp-zhiming/src/pages/poster/index.tsx · 海报分享（M17 · P0）
 // 调用 server /share/links → 拿 key → 用 key 拼 /share/poster?key=&lang= 出图（mp 端 wx.canvasToTempFilePath 处理）
 // MVP：本期显示海报链接 + 复制按钮；canvas 渲染留到阶段 3.5 后补
-import { View, Text, Button, Image } from "@tarojs/components"
+import { Button, Image, Text, View } from "@tarojs/components"
 import Taro from "@tarojs/taro"
 import { useState } from "react"
 import { createShareLink } from "../../lib/api"
@@ -24,15 +24,13 @@ export default function PosterPage() {
       setKey(r.key)
       setExpireAt(r.expiresAt)
     } catch (e) {
-      setErr(String(e?.message ?? e))
+      setErr(e instanceof Error ? e.message : String(e))
     } finally {
       setBusy(false)
     }
   }
 
-  const posterUrl = key
-    ? `${POSTER_HOST}/api/v1/share/poster?key=${key}&lang=zh-CN`
-    : null
+  const posterUrl = key ? `${POSTER_HOST}/api/v1/share/poster?key=${key}&lang=zh-CN` : null
 
   const copyLink = async () => {
     if (!posterUrl) return
@@ -69,7 +67,10 @@ export default function PosterPage() {
         {key ? "重新生成" : t("poster.generate")}
       </Button>
       {posterUrl && (
-        <Button className="w-full py-3 bg-card-strong text-ink border border-rule rounded-lg" onClick={copyLink}>
+        <Button
+          className="w-full py-3 bg-card-strong text-ink border border-rule rounded-lg"
+          onClick={copyLink}
+        >
           {t("poster.save")}
         </Button>
       )}

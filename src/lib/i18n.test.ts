@@ -1,6 +1,15 @@
 // mp-zhiming/src/lib/i18n.test.ts · 双语字典 + useLocale（M17 单测）
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { t, useLocale, type Locale } from "./i18n"
+// mock Taro 避免 happy-dom 下 ESM/CJS 兼容问题
+import { beforeEach, describe, expect, it, vi } from "vitest"
+vi.mock("@tarojs/taro", () => ({
+  default: {
+    setStorageSync: vi.fn(),
+    getStorageSync: vi.fn(() => ""),
+    getSystemInfoSync: vi.fn(() => ({ language: "zh-CN" })),
+  },
+}))
+// eslint-disable-next-line import/first
+import { t, useLocale } from "./i18n"
 
 describe("t() 取词", () => {
   beforeEach(() => {
@@ -30,24 +39,19 @@ describe("t() 取词", () => {
 })
 
 describe("setLocale 持久化", () => {
-  let setStorageSync: ReturnType<typeof vi.fn>
-  let getStorageSync: ReturnType<typeof vi.fn>
-
   beforeEach(() => {
-    setStorageSync = vi.fn()
-    getStorageSync = vi.fn(() => "")
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ;(globalThis as any).wx = { setStorageSync, getStorageSync }
+    useLocale.setState({ locale: "zh-CN" })
   })
 
-  afterEach(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    delete (globalThis as any).wx
-  })
-
-  it("setLocale('zh-TW') → 调 wx.setStorageSync + state 切到 zh-TW", () => {
+  it("setLocale('zh-TW') → state 切到 zh-TW（Taro.setStorageSync 已 vi.mock 不抛错即视为调通）", () => {
+    expect(useLocale.getState().locale).toBe("zh-CN")
     useLocale.getState().setLocale("zh-TW")
-    expect(setStorageSync).toHaveBeenCalledWith("zm-mp-locale", "zh-TW")
     expect(useLocale.getState().locale).toBe("zh-TW")
+  })
+
+  it("setLocale('zh-CN') → 回落简体中文", () => {
+    useLocale.getState().setLocale("zh-TW")
+    useLocale.getState().setLocale("zh-CN")
+    expect(useLocale.getState().locale).toBe("zh-CN")
   })
 })

@@ -1,6 +1,15 @@
 // mp-zhiming/src/store/auth.test.ts · Zustand 状态 + silentLogin（M17 单测）
+// mock Taro 避免 happy-dom 下 ESM/CJS 兼容问题
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { useAuth, type AuthUser } from "./auth"
+vi.mock("@tarojs/taro", () => ({
+  default: {
+    login: vi.fn(() => Promise.resolve({ code: "mock-code" })),
+    setStorageSync: vi.fn(),
+    getStorageSync: vi.fn(() => ""),
+  },
+}))
+// eslint-disable-next-line import/first
+import { type AuthUser, useAuth } from "./auth"
 
 const sampleUser: AuthUser = {
   id: "u-1",

@@ -1,8 +1,8 @@
 // mp-zhiming/src/pages/chart-result/index.tsx · 排盘结果（M17 · P1）
 // 引擎盘面（中文键 JSON）直接渲染：四柱 + 五行分值；MVP 不渲染完整大运/神煞
-import { View, Text } from "@tarojs/components"
-import { useEffect, useState } from "react"
+import { Text, View } from "@tarojs/components"
 import Taro from "@tarojs/taro"
+import { useEffect, useState } from "react"
 import { t } from "../../lib/i18n"
 
 type Chart = {
@@ -13,9 +13,28 @@ type Chart = {
 }
 
 const WUXING: Record<string, string> = {
-  甲: "木", 乙: "木", 丙: "火", 丁: "火", 戊: "土", 己: "土", 庚: "金", 辛: "金", 壬: "水", 癸: "水",
-  子: "水", 丑: "土", 寅: "木", 卯: "木", 辰: "土", 巳: "火", 午: "火", 未: "土",
-  申: "金", 酉: "金", 戌: "土", 亥: "水",
+  甲: "木",
+  乙: "木",
+  丙: "火",
+  丁: "火",
+  戊: "土",
+  己: "土",
+  庚: "金",
+  辛: "金",
+  壬: "水",
+  癸: "水",
+  子: "水",
+  丑: "土",
+  寅: "木",
+  卯: "木",
+  辰: "土",
+  巳: "火",
+  午: "火",
+  未: "土",
+  申: "金",
+  酉: "金",
+  戌: "土",
+  亥: "水",
 }
 const WX_COLOR: Record<string, string> = {
   木: "text-[#3a8d4e]",
@@ -64,7 +83,7 @@ export default function ChartResult() {
         <View className="flex justify-between">
           {pillars.length === 4 ? (
             pillars.map((p, i) => (
-              <View key={i} className="flex-1 text-center">
+              <View key={p} className="flex-1 text-center">
                 <Text className="block text-xs text-muted">{["年", "月", "日", "时"][i]}</Text>
                 <Text className="block mt-1 text-xl font-serif text-ink">{p}</Text>
               </View>
