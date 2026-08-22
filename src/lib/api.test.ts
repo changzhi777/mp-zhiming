@@ -16,7 +16,7 @@ vi.mock("@tarojs/taro", () => ({
 }))
 
 // 延迟导入（必须在 mock 之后）
-const { wxLogin } = await import("./api")
+const { wxLogin, getMe, getProfile, getHuangli, createShareLink, castChart, getDaily } = await import("./api")
 
 describe("request 通用行为", () => {
   beforeEach(() => {
@@ -112,5 +112,73 @@ describe("request 通用行为", () => {
       code: 500,
       message: "请求失败",
     })
+  })
+})
+
+describe("5 个业务 API 函数（getMe/getProfile/getHuangli/createShareLink/castChart/getDaily）", () => {
+  beforeEach(() => {
+    requestMock.mockReset()
+    reLaunchMock.mockReset()
+    useAuth.setState({ accessToken: null, user: null })
+  })
+
+  afterEach(() => vi.clearAllMocks())
+
+  const ok = (data: unknown) => requestMock.mockResolvedValue({ statusCode: 200, data })
+
+  it("getMe：GET /me → 返 { id, email, locale, credits, mainProfileId }", async () => {
+    ok({ id: "u-1", email: "wx_x@x.dev", locale: "zh-CN", credits: 10000, mainProfileId: null })
+    const r = await getMe()
+    expect(r.id).toBe("u-1")
+    expect(r.mainProfileId).toBeNull()
+    const url = (requestMock.mock.calls[0][0] as { url: string }).url
+    expect(url).toContain("/me")
+    expect(url).not.toContain("?token=")
+  })
+
+  it("getProfile(id)：GET /me/profiles/:id → 返 { id, name, chart }", async () => {
+    ok({ id: "p-1", name: "测试盘", chart: { 八字: { 四柱: "甲子 乙丑" } } })
+    const r = await getProfile("p-1")
+    expect(r.name).toBe("测试盘")
+    const url = (requestMock.mock.calls[0][0] as { url: string }).url
+    expect(url).toContain("/me/profiles/p-1")
+  })
+
+  it("getHuangli(y,m,d)：GET /huangli?year&month&day → 返 { 公历, 宜, 忌 }", async () => {
+    ok({ 公历: "1990年3月15日", 宜: ["祭祀"], 忌: ["动土"], cached: false })
+    const r = await getHuangli(1990, 3, 15)
+    expect(r.公历).toContain("1990")
+    const url = (requestMock.mock.calls[0][0] as { url: string }).url
+    expect(url).toContain("year=1990")
+    expect(url).toContain("month=3")
+    expect(url).toContain("day=15")
+  })
+
+  it("createShareLink(profileId)：POST /share/links → 返 { key, expiresAt }", async () => {
+    ok({ key: "abc-key", expiresAt: "2026-09-01T00:00:00Z" })
+    const r = await createShareLink("main")
+    expect(r.key).toBe("abc-key")
+    const call = requestMock.mock.calls[0][0] as { url: string; method: string; data: unknown }
+    expect(call.url).toContain("/share/links")
+    expect(call.method).toBe("POST")
+    expect(call.data).toEqual({ profileId: "main" })
+  })
+
+  it("castChart(birth)：POST /charts → 返 { 八字, hourKnown, cached }", async () => {
+    ok({ 输入: {}, 八字: { 四柱: "甲子 乙丑 丙寅 丁卯" }, hourKnown: true, cached: false })
+    const r = await castChart({ calendar: "solar", year: 1990, month: 3, day: 15 })
+    expect(r.八字.四柱).toContain("甲子")
+    const call = requestMock.mock.calls[0][0] as { url: string; method: string }
+    expect(call.url).toContain("/charts")
+    expect(call.method).toBe("POST")
+  })
+
+  it("getDaily(y,m,d)：GET /daily?year&month&day → 返 { personalized, 综合 }", async () => {
+    ok({ personalized: true, 日主: "甲", 流日干支: "乙", 综合: "大吉" })
+    const r = await getDaily(2026, 8, 22)
+    expect(r.personalized).toBe(true)
+    expect(r.综合).toBe("大吉")
+    const url = (requestMock.mock.calls[0][0] as { url: string }).url
+    expect(url).toContain("/daily?year=2026")
   })
 })
