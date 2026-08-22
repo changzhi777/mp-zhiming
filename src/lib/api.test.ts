@@ -16,7 +16,11 @@ vi.mock("@tarojs/taro", () => ({
 }))
 
 // 延迟导入（必须在 mock 之后）
-const { wxLogin, getMe, getProfile, getHuangli, createShareLink, castChart, getDaily } = await import("./api")
+const { wxLogin, getMe, getProfile, getHuangli, createShareLink, castChart, getDaily, getLocations } =
+  await import("./api")
+
+/** 顶层 helper：模拟成功响应 */
+const ok = (data: unknown) => requestMock.mockResolvedValue({ statusCode: 200, data })
 
 describe("request 通用行为", () => {
   beforeEach(() => {
@@ -124,8 +128,6 @@ describe("5 个业务 API 函数（getMe/getProfile/getHuangli/createShareLink/c
 
   afterEach(() => vi.clearAllMocks())
 
-  const ok = (data: unknown) => requestMock.mockResolvedValue({ statusCode: 200, data })
-
   it("getMe：GET /me → 返 { id, email, locale, credits, mainProfileId }", async () => {
     ok({ id: "u-1", email: "wx_x@x.dev", locale: "zh-CN", credits: 10000, mainProfileId: null })
     const r = await getMe()
@@ -180,5 +182,40 @@ describe("5 个业务 API 函数（getMe/getProfile/getHuangli/createShareLink/c
     expect(r.综合).toBe("大吉")
     const url = (requestMock.mock.calls[0][0] as { url: string }).url
     expect(url).toContain("/daily?year=2026")
+  })
+})
+
+describe("getLocations（C3 行政区划联动）", () => {
+  beforeEach(() => {
+    requestMock.mockReset()
+    useAuth.setState({ accessToken: null, user: null })
+  })
+
+  it("无参数：GET /locations", async () => {
+    requestMock.mockResolvedValue({
+      statusCode: 200,
+      data: [{ code: "11", name: "北京市", parentCode: null, level: 1, lat: 39.9, lon: 116.4 }],
+    })
+    const r = await getLocations()
+    expect(r.length).toBe(1)
+    expect(r[0].name).toBe("北京市")
+    const url = (requestMock.mock.calls[0][0] as { url: string }).url
+    expect(url).toContain("/locations")
+    expect(url).not.toContain("?")
+  })
+
+  it("带 parentCode + level：GET /locations?parentCode=11&level=2", async () => {
+    requestMock.mockResolvedValue({
+      statusCode: 200,
+      data: [
+        { code: "1101", name: "市辖区", parentCode: "11", level: 2, lat: 39.9, lon: 116.4 },
+        { code: "1102", name: "县", parentCode: "11", level: 2, lat: null, lon: null },
+      ],
+    })
+    const r = await getLocations("11", 2)
+    expect(r.length).toBe(2)
+    const url = (requestMock.mock.calls[0][0] as { url: string }).url
+    expect(url).toContain("parentCode=11")
+    expect(url).toContain("level=2")
   })
 })
