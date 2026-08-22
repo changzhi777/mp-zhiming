@@ -16,8 +16,16 @@ vi.mock("@tarojs/taro", () => ({
 }))
 
 // 延迟导入（必须在 mock 之后）
-const { wxLogin, getMe, getProfile, getHuangli, createShareLink, castChart, getDaily, getLocations } =
-  await import("./api")
+const {
+  wxLogin,
+  getMe,
+  getProfile,
+  getHuangli,
+  createShareLink,
+  castChart,
+  getDaily,
+  getLocations,
+} = await import("./api")
 
 /** 顶层 helper：模拟成功响应 */
 const ok = (data: unknown) => requestMock.mockResolvedValue({ statusCode: 200, data })
@@ -217,5 +225,83 @@ describe("getLocations（C3 行政区划联动）", () => {
     const url = (requestMock.mock.calls[0][0] as { url: string }).url
     expect(url).toContain("parentCode=11")
     expect(url).toContain("level=2")
+  })
+})
+
+// ── 错误码矩阵（Stage 3.6 · 借鉴 Payload CMS 测试矩阵）────────
+describe("错误码矩阵（401/403/429/500）", () => {
+  beforeEach(() => {
+    requestMock.mockReset()
+    reLaunchMock.mockReset()
+    useAuth.setState({ accessToken: null, user: null })
+  })
+
+  afterEach(() => vi.clearAllMocks())
+
+  it("401 + WWW-Authenticate 头：401 响应被识别为鉴权失败 → 清态跳 login", async () => {
+    // R3 Stage3.6：服务端现在 401 必带 WWW-Authenticate: Bearer realm=zhiming
+    // 客户端需正确识别（不只是 body code）
+    useAuth.getState().setSession("tok-z", {
+      id: "u-1",
+      email: "wx_x@placeholder.local",
+      locale: "zh-CN",
+      credits: 10000,
+    })
+    requestMock.mockResolvedValue({
+      statusCode: 401,
+      data: { code: 40101, message: "未登录或登录已过期" },
+      header: { "WWW-Authenticate": 'Bearer realm="zhiming"' },
+    })
+    const { getProfile } = await import("./api")
+    await expect(getProfile("main")).rejects.toBeInstanceOf(ApiErrorClass)
+    expect(useAuth.getState().accessToken).toBeNull()
+    expect(reLaunchMock).toHaveBeenCalledWith({ url: "/pages/login/index" })
+  })
+
+  it("403 ADMIN_REQUIRED：非管理员访问管理接口 → 透传 ApiErrorClass(code=40302)", async () => {
+    requestMock.mockResolvedValue({
+      statusCode: 403,
+      data: { code: 40302, message: "非管理员" },
+    })
+    await expect(getMe()).rejects.toMatchObject({
+      code: 40302,
+      message: "非管理员",
+    })
+    // 403 ≠ 401，不清态不跳 login
+    expect(reLaunchMock).not.toHaveBeenCalled()
+  })
+
+  it("429 RATE 限流：透传 ApiErrorClass(code=42901) + 不清态", async () => {
+    requestMock.mockResolvedValue({
+      statusCode: 429,
+      data: { code: 42901, message: "请求过于频繁，请稍后再试" },
+    })
+    useAuth.getState().setSession("tok-rl", {
+      id: "u-1",
+      email: "wx_x@placeholder.local",
+      locale: "zh-CN",
+      credits: 10000,
+    })
+    await expect(getProfile("main")).rejects.toMatchObject({ code: 42901 })
+    // 限流不清态
+    expect(useAuth.getState().accessToken).toBe("tok-rl")
+    expect(reLaunchMock).not.toHaveBeenCalled()
+  })
+
+  it("500 ENGINE_FAIL：兜底 ApiError，state 不变", async () => {
+    requestMock.mockResolvedValue({
+      statusCode: 500,
+      data: { code: 50001, message: "服务器内部错误" },
+    })
+    useAuth.getState().setSession("tok-500", {
+      id: "u-1",
+      email: "wx_x@placeholder.local",
+      locale: "zh-CN",
+      credits: 10000,
+    })
+    await expect(castChart({})).rejects.toMatchObject({ code: 50001 })
+    // 5xx ≠ 401，token 保留
+    expect(useAuth.getState().accessToken).toBe("tok-500")
+    expect(reLaunchMock).not.toHaveBeenCalled()
   })
 })
