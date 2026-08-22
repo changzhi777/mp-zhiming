@@ -1,6 +1,6 @@
 // mp-zhiming/src/lib/i18n.test.ts · 双语字典 + useLocale（M17 单测）
 // mock Taro 避免 happy-dom 下 ESM/CJS 兼容问题
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { beforeEach, describe, expect, it, vi, type Mock } from "vitest"
 vi.mock("@tarojs/taro", () => ({
   default: {
     setStorageSync: vi.fn(),
@@ -10,6 +10,10 @@ vi.mock("@tarojs/taro", () => ({
 }))
 // eslint-disable-next-line import/first
 import { t, useLocale } from "./i18n"
+
+const storageMock = () => (globalThis as unknown as { wx: { getStorageSync: Mock } }).wx.getStorageSync
+const systemMock = () =>
+  (globalThis as unknown as { wx: { getSystemInfoSync: Mock } }).wx.getSystemInfoSync
 
 describe("t() 取词", () => {
   beforeEach(() => {
