@@ -20,7 +20,9 @@
     "sync:shared": "git -C vendor/zhiming pull origin main",
     "ci": "pnpm sync:shared && pnpm install && pnpm lint && pnpm typecheck && pnpm test",
     "mp:preview": "node scripts/ci.mjs preview",
-    "mp:upload": "node scripts/ci.mjs upload"
+    "mp:upload": "node scripts/ci.mjs upload",
+    "mp:check": "node scripts/ci-check.mjs",
+    "mp:check:strict": "node scripts/ci-check.mjs --strict"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.0.0",
