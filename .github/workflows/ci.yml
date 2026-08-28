@@ -32,12 +32,15 @@ jobs:
           cache: pnpm
           cache-dependency-path: '**/pnpm-lock.yaml'
 
-      - name: Sync shared contracts
+      - name: Sync shared contracts(私有主仓需 ZHIMING_PAT secret · fine-grained 只读)
         run: |
-          if [ -d vendor/zhiming ]; then
+          if [ -d vendor/zhiming/.git ]; then
             git -C vendor/zhiming pull --depth=1 origin main || echo "shared sync skipped (offline?)"
+          elif [ -n "${{ secrets.ZHIMING_PAT }}" ]; then
+            git clone --depth=1 https://x-access-token:${{ secrets.ZHIMING_PAT }}@github.com/changzhi777/zhiming.git vendor/zhiming
           else
-            git clone --depth=1 https://github.com/changzhi777/zhiming.git vendor/zhiming
+            echo "::error::缺 ZHIMING_PAT secret(fine-grained PAT,对 changzhi777/zhiming 只读 Contents)。配置:mp 仓 Settings → Secrets → Actions → ZHIMING_PAT"
+            exit 1
           fi
 
       - name: Install dependencies
