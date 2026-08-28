@@ -42,6 +42,7 @@
     "@babel/preset-react": "^8.0.1",
     "@babel/preset-typescript": "^8.0.1",
     "@biomejs/biome": "^1.9.4",
+    "@playwright/test": "^1.62.1",
     "@tarojs/cli": "^3.6.40",
     "@tarojs/plugin-platform-weapp": "^3.6.40",
     "@tarojs/webpack5-runner": "^3.6.40",
