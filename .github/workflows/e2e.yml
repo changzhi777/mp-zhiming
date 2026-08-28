@@ -1,0 +1,81 @@
+# mp-zhiming/.github/workflows/e2e.yml · 微信小程序 E2E CI
+# 触发:PR + push main · 跑 Taro H5 模式 E2E
+name: e2e
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/**"
+      - ".github/workflows/e2e.yml"
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      # mp-zhiming 通过 vite proxy 调主仓 server(本地 3010 / CI 需主仓 dev URL)
+      # CI 环境:用主仓 e2e CI 的 server(详见 docs/mp-e2e-cors.md)
+      SERVER_URL: ${{ secrets.ZHIMING_SERVER_URL || 'http://localhost:3010' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 10 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+
+      - name: 启动 Taro H5 dev
+        run: |
+          pnpm dev:h5 &
+          for i in $(seq 1 60); do
+            code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:10086 2>/dev/null || echo "000")
+            [ "$code" = "200" ] && break
+            sleep 1
+          done
+
+      - name: 跑 Playwright E2E
+        id: playwright
+        run: pnpm exec playwright test --reporter=list
+        continue-on-error: true
+
+      - name: 上传 HTML 报告
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-mp
+          path: e2e-report/
+          retention-days: 14
+
+      - name: 上传失败 trace
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-traces-mp
+          path: |
+            test-results/
+            e2e-results/
+          retention-days: 14
+
+      - name: PR 评论(失败)
+        if: failure() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '## ❌ mp-zhiming E2E 失败\n\n见 Artifacts `playwright-report-mp` + `playwright-traces-mp`'
+            });
+
+      - name: 退出码
+        if: steps.playwright.outcome == 'failure'
+        run: exit 1
